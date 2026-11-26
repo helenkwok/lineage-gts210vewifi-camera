@@ -1,0 +1,74 @@
+name: build-camera
+
+on:
+  workflow_dispatch:
+    inputs:
+      stop_after:
+        description: "Stop after: space (disk/RAM report), sync, or build"
+        default: build
+        type: choice
+        options: [space, sync, build]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          df -h / /mnt; free -g
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/local/share/boost \
+            /usr/local/lib/node_modules /usr/share/swift /usr/local/.ghcup /opt/microsoft /opt/google /opt/az \
+            /usr/local/share/powershell /usr/local/share/chromium /usr/lib/jvm
+          sudo docker image prune -af >/dev/null 2>&1 || true
+          sudo swapoff -a; sudo rm -f /mnt/swapfile
+          # one large volume from the free space on / and /mnt (LVM over loop files)
+          ROOT_FREE=$(( $(df --output=avail -k / | tail -1) / 1024 / 1024 - 6 ))
+          MNT_FREE=$(( $(df --output=avail -k /mnt | tail -1) / 1024 / 1024 - 2 ))
+          sudo fallocate -l ${ROOT_FREE}G /root.img; sudo fallocate -l ${MNT_FREE}G /mnt/mnt.img
+          R=$(sudo losetup --find --show /root.img); M=$(sudo losetup --find --show /mnt/mnt.img)
+          sudo pvcreate -q $R $M; sudo vgcreate -q build $R $M
+          sudo lvcreate -q -L 24G -n swap build; sudo mkswap -q /dev/build/swap; sudo swapon /dev/build/swap
+          sudo lvcreate -q -l 100%FREE -n src build; sudo mkfs.ext4 -q -m0 -O ^has_journal /dev/build/src
+          sudo mkdir -p /build && sudo mount -o noatime /dev/build/src /build && sudo chown $USER /build
+          echo "== after"; df -h /build; free -g
+
+      - name: Stop (space report only)
+        if: inputs.stop_after == 'space'
+        run: exit 0
+
+      - name: Install build tools
+        if: inputs.stop_after != 'space'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bc bison build-essential flex g++-multilib gcc-multilib git git-lfs gnupg gperf \
+            lib32z1-dev libelf-dev liblz4-tool libssl-dev libxml2 libxml2-utils lzop rsync schedtool squashfs-tools \
+            xsltproc zip unzip zlib1g-dev python3 python-is-python3 libncurses-dev fontconfig >/dev/null
+          mkdir -p ~/bin && curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o ~/bin/repo && chmod +x ~/bin/repo
+          git config --global user.name builder; git config --global user.email builder@localhost
+
+      - name: Sync LineageOS 22.2 (shallow)
+        if: inputs.stop_after != 'space'
+        run: |
+          cd /build
+          ~/bin/repo init -q -u https://github.com/LineageOS/android.git -b lineage-22.2 --git-lfs --depth=1 \
+            --no-clone-bundle -g default,-notdefault,-darwin,-mips,-x86,-riscv64
+          mkdir -p .repo/local_manifests && cp "$GITHUB_WORKSPACE/local_manifests/"*.xml .repo/local_manifests/
+          ~/bin/repo sync -q -c -j16 --no-tags --no-clone-bundle --optimized-fetch --force-sync
+          du -sh /build/.repo; df -h /build; free -g
+
+      - name: Build camera modules
+        if: inputs.stop_after == 'build'
+        run: |
+          ( while sleep 300; do echo "[watch] $(free -g | awk '/Mem/{print "mem used "$3"G"}') $(free -g | awk '/Swap/{print "swap used "$3"G"}') $(df -h /build | awk 'NR==2{print "disk free "$4}')"; done ) &
+          JOBS=4 GOGC=50 bash scripts/build-camera.sh /build
+
+      - name: Upload camera modules
+        if: inputs.stop_after == 'build'
+        uses: actions/upload-artifact@v4
+        with:
+          name: camera-modules
+          path: artifacts/camera-modules.tar.gz
+          retention-days: 30

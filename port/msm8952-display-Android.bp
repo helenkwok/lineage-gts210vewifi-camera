@@ -1,0 +1,8 @@
+// Porting shim (android-dev-tablet): LineageOS 22.2 surfaceflinger references
+// //hardware/qcom-caf/msm8952/display:display_intf_headers via the qtidisplay namespace.
+soong_namespace {}
+cc_library_headers {
+    name: "display_intf_headers",
+    vendor_available: true,
+    export_include_dirs: ["libgralloc", "libqdutils", "libqservice"],
+}

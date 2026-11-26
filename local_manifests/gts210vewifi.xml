@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Galaxy Tab S2 9.7 (SM-T813, gts210vewifi) on LineageOS 22.2 -->
+<manifest>
+  <remote name="losul" fetch="https://github.com/" />
+
+  <!-- Device, kernel and vendor trees (retiredtab, lineage-21 branches) -->
+  <project name="retiredtab/gts210vewifi" path="device/samsung/gts210vewifi" remote="github" revision="lineage-21" />
+  <project name="retiredtab/msm8976-common" path="device/samsung/msm8976-common" remote="github" revision="lineage-21" />
+  <project name="syphyr/android_kernel_samsung_msm8976" path="kernel/samsung/msm8976" remote="github" revision="lineage-16.0" />
+  <project name="retiredtab/proprietary_vendor_samsung_msm8976" path="vendor/samsung" remote="github" revision="lineage-20" />
+  <project name="LineageOS/android_hardware_samsung" path="hardware/samsung" remote="github" revision="lineage-22.2" />
+
+  <!-- Legacy Qualcomm repos not in official LineageOS 22.2 (from LineageOS-UL) -->
+  <project path="device/qcom/sepolicy-legacy" name="LineageOS-UL/android_device_qcom_sepolicy" remote="losul" revision="lineage-21.0-legacy" />
+  <project path="hardware/qcom-caf/msm8952/audio" name="LineageOS-UL/android_hardware_qcom_audio" remote="losul" revision="lineage-21.0-caf-msm8952" />
+  <project path="hardware/qcom-caf/msm8952/display" name="LineageOS-UL/android_hardware_qcom_display" remote="losul" revision="lineage-21.0-caf-msm8952" />
+  <project path="hardware/qcom-caf/msm8952/media" name="LineageOS-UL/android_hardware_qcom_media" remote="losul" revision="lineage-21.0-caf-msm8952" />
+</manifest>

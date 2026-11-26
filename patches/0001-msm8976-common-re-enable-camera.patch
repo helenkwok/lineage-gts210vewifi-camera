@@ -1,0 +1,27 @@
+diff --git a/camera/Android.mk.old b/camera/Android.mk
+similarity index 100%
+rename from camera/Android.mk.old
+rename to camera/Android.mk
+diff --git a/msm8976.mk b/msm8976.mk
+index 18c82a2..2853318 100644
+--- a/msm8976.mk
++++ b/msm8976.mk
+@@ -124,13 +124,11 @@ PRODUCT_PACKAGES += \
+     libbt-vendor
+ 
+ # Camera
+-#PRODUCT_PACKAGES += \
+-#    android.hardware.camera.provider@2.4-impl \
+-#    camera.device@1.0-impl \
+-#    camera.msm8952 \
+-#    libshims_camera
+-
+-PRODUCT_NO_CAMERA := true
++PRODUCT_PACKAGES += \
++    android.hardware.camera.provider@2.4-impl \
++    camera.device@1.0-impl \
++    camera.msm8952 \
++    libshims_camera
+ 
+ # Configstore
+ PRODUCT_PACKAGES += \
