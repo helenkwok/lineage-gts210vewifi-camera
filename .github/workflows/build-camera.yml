@@ -39,7 +39,7 @@ jobs:
             echo "loop on $m ($dev): ${free_g}G"
           done
           sudo pvcreate -q $PVS; sudo vgcreate -q build $PVS
-          sudo lvcreate -q -L 24G -n swap build; sudo mkswap -q /dev/build/swap; sudo swapon /dev/build/swap
+          sudo lvcreate -q -L 20G -n swap build; sudo mkswap -q /dev/build/swap; sudo swapon /dev/build/swap
           sudo lvcreate -q -l 100%FREE -n src build; sudo mkfs.ext4 -q -m0 -O ^has_journal /dev/build/src
           sudo mkdir -p /build && sudo mount -o noatime /dev/build/src /build && sudo chown $USER /build
           echo "== after"; df -h /build; free -g
@@ -66,7 +66,10 @@ jobs:
             --no-clone-bundle -g default,-notdefault,-darwin,-mips,-x86,-riscv64
           mkdir -p .repo/local_manifests && cp "$GITHUB_WORKSPACE/local_manifests/"*.xml .repo/local_manifests/
           ~/bin/repo sync -q -c -j16 --no-tags --no-clone-bundle --optimized-fetch --force-sync
-          du -sh /build/.repo; df -h /build; free -g
+          echo "== after sync"; du -sh /build/.repo; df -h /build
+          # the build needs only the checked-out files: drop git history to make room for out/
+          rm -rf /build/.repo/project-objects /build/.repo/projects
+          echo "== after pruning .repo"; df -h /build
 
       - name: Build camera modules
         if: inputs.stop_after == 'build'
