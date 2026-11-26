@@ -25,11 +25,20 @@ jobs:
           sudo docker image prune -af >/dev/null 2>&1 || true
           sudo swapoff -a; sudo rm -f /mnt/swapfile
           # one large volume from the free space on / and /mnt (LVM over loop files)
-          ROOT_FREE=$(( $(df --output=avail -k / | tail -1) / 1024 / 1024 - 6 ))
-          MNT_FREE=$(( $(df --output=avail -k /mnt | tail -1) / 1024 / 1024 - 2 ))
-          sudo fallocate -l ${ROOT_FREE}G /root.img; sudo fallocate -l ${MNT_FREE}G /mnt/mnt.img
-          R=$(sudo losetup --find --show /root.img); M=$(sudo losetup --find --show /mnt/mnt.img)
-          sudo pvcreate -q $R $M; sudo vgcreate -q build $R $M
+          echo "== after cleanup"; df -h / /mnt; lsblk -o NAME,SIZE,MOUNTPOINT
+          # one loop file per distinct filesystem, leaving room for the runner's own logs
+          PVS=""
+          for m in / /mnt; do
+            dev=$(df --output=source "$m" | tail -1)
+            case " $SEEN " in *" $dev "*) continue;; esac; SEEN="$SEEN $dev"
+            free_g=$(( $(df --output=avail -k "$m" | tail -1) / 1024 / 1024 - 10 ))
+            [ "$free_g" -gt 5 ] || continue
+            img="${m%/}/build-$(echo "$dev" | tr -c 'a-z0-9' _).img"
+            sudo fallocate -l ${free_g}G "$img"
+            PVS="$PVS $(sudo losetup --find --show "$img")"
+            echo "loop on $m ($dev): ${free_g}G"
+          done
+          sudo pvcreate -q $PVS; sudo vgcreate -q build $PVS
           sudo lvcreate -q -L 24G -n swap build; sudo mkswap -q /dev/build/swap; sudo swapon /dev/build/swap
           sudo lvcreate -q -l 100%FREE -n src build; sudo mkfs.ext4 -q -m0 -O ^has_journal /dev/build/src
           sudo mkdir -p /build && sudo mount -o noatime /dev/build/src /build && sudo chown $USER /build
