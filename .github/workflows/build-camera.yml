@@ -61,15 +61,7 @@ jobs:
       - name: Sync LineageOS 22.2 (shallow)
         if: inputs.stop_after != 'space'
         run: |
-          cd /build
-          ~/bin/repo init -q -u https://github.com/LineageOS/android.git -b lineage-22.2 --git-lfs --depth=1 \
-            --no-clone-bundle -g default,-notdefault,-darwin,-mips,-x86,-riscv64
-          mkdir -p .repo/local_manifests && cp "$GITHUB_WORKSPACE/local_manifests/"*.xml .repo/local_manifests/
-          ~/bin/repo sync -q -c -j16 --no-tags --no-clone-bundle --optimized-fetch --force-sync
-          echo "== after sync"; du -sh /build/.repo; df -h /build
-          # the build needs only the checked-out files: drop git history to make room for out/
-          rm -rf /build/.repo/project-objects /build/.repo/projects
-          echo "== after pruning .repo"; df -h /build
+          REPO=~/bin/repo bash scripts/sync-tree.sh /build
 
       - name: Build camera modules
         if: inputs.stop_after == 'build'

@@ -11,6 +11,7 @@ stopped working after LineageOS 18.1. This repository tries to bring them back.
 | `local_manifests/gts210vewifi.xml` | Device, kernel and vendor trees plus legacy Qualcomm repos on top of LineageOS 22.2 |
 | `patches/0001-msm8976-common-re-enable-camera.patch` | Re-enables `camera.msm8952`, `libshims_camera`, `camera.device@1.0-impl` and the camera provider |
 | `port/msm8952-display-Android.bp` | Provides `display_intf_headers`, which LineageOS 22.2's surfaceflinger expects |
+| `scripts/sync-tree.sh` | Shallow sync that fits a free GitHub runner (batches, drops git objects and unused toolchains) |
 | `scripts/build-camera.sh` | Builds only the camera modules from a synced tree |
 | `.github/workflows/build-camera.yml` | Runs the sync and build on GitHub Actions and uploads the modules |
 
