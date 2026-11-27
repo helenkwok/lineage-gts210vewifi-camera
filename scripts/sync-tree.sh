@@ -36,4 +36,4 @@ n=$(wc -l < /tmp/projects.txt); echo "[sync] $n projects"; [ "$n" -gt 100 ] || {
 grep -vE '^prebuilts/(clang/host/linux-x86|rust) :' /tmp/projects.txt > /tmp/rest.txt || true
 split -l "$BATCH" /tmp/rest.txt /tmp/batch.
 for b in /tmp/batch.*; do sync_batch < "$b"; done
-echo "[sync] done"; du -sh "$SRC" 2>/dev/null; df -h .
+echo "[sync] done"; df -h . || true
