@@ -29,11 +29,11 @@ sync_batch() {  # args: "path : name" lines on stdin
   echo "[sync] +${#paths[@]} projects, disk free $(df -h . | awk 'NR==2{print $4}')"
 }
 
-"$REPO" list > /tmp/projects.txt
-echo "[sync] $(wc -l < /tmp/projects.txt) projects"
+"$REPO" list --all > /tmp/projects.txt
+n=$(wc -l < /tmp/projects.txt); echo "[sync] $n projects"; [ "$n" -gt 100 ] || { echo "repo list returned too few projects"; exit 1; }
 # biggest first, alone, so their objects are freed before anything else lands
-grep -E '^prebuilts/(clang/host/linux-x86|rust) :' /tmp/projects.txt | sync_batch
-grep -vE '^prebuilts/(clang/host/linux-x86|rust) :' /tmp/projects.txt > /tmp/rest.txt
+{ grep -E '^prebuilts/(clang/host/linux-x86|rust) :' /tmp/projects.txt || true; } | sync_batch
+grep -vE '^prebuilts/(clang/host/linux-x86|rust) :' /tmp/projects.txt > /tmp/rest.txt || true
 split -l "$BATCH" /tmp/rest.txt /tmp/batch.
 for b in /tmp/batch.*; do sync_batch < "$b"; done
 echo "[sync] done"; du -sh "$SRC" 2>/dev/null; df -h .
