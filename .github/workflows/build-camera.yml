@@ -67,7 +67,11 @@ jobs:
         if: inputs.stop_after == 'build'
         run: |
           ( while sleep 300; do echo "[watch] $(free -g | awk '/Mem/{print "mem used "$3"G"}') $(free -g | awk '/Swap/{print "swap used "$3"G"}') $(df -h /build | awk 'NR==2{print "disk free "$4}')"; done ) &
-          JOBS=4 GOGC=50 bash scripts/build-camera.sh /build
+          # cap the build's RAM so it swaps instead of starving the runner agent (which kills the job)
+          sudo systemd-run --scope --quiet --uid=$(id -u) --gid=$(id -g) \
+            -p MemoryHigh=11G -p MemoryMax=12G -p MemorySwapMax=20G \
+            env HOME=$HOME PATH=$PATH JOBS=4 GOGC=25 GOMAXPROCS=3 \
+            nice -n 10 bash scripts/build-camera.sh /build
 
       - name: Upload camera modules
         if: inputs.stop_after == 'build'
