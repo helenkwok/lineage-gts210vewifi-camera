@@ -32,7 +32,10 @@ sync_batch() {  # args: "path : name" lines on stdin
 # Projects a camera-modules-only build never needs. Leaving them out shrinks Soong's analysis
 # (memory) and the disk; the build runs with ALLOW_MISSING_DEPENDENCIES=true.
 SKIP='^(cts|test|platform_testing|developers|tools/tradefederation|tools/test|packages/apps|device/google|device/generic/(goldfish|car|trout)|device/lineage/(atv|car)|prebuilts/(android-emulator|qemu-kernel|abi-dumps|gradle-plugin)|external/(google-cloud-java|cronet|tensorflow|pytorch|deqp|deqp-deps|swiftshader|angle|chromium-webview|exoplayer|leakcanary2|sdv))(/| :)'
+# ...except projects that define Soong plugins or modules other code needs
+KEEP='^(test/app_compat/csuite|device/google/cuttlefish|device/google/cuttlefish_prebuilts) :'
 "$REPO" list --all | grep -vE "$SKIP" > /tmp/projects.txt || true
+"$REPO" list --all | grep -E "$KEEP" >> /tmp/projects.txt || true
 echo "[sync] skipping $("$REPO" list --all | grep -cE "$SKIP" || true) projects not needed for the camera modules"
 n=$(wc -l < /tmp/projects.txt); echo "[sync] $n projects"; [ "$n" -gt 100 ] || { echo "repo list returned too few projects"; exit 1; }
 # biggest first, alone, so their objects are freed before anything else lands
