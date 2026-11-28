@@ -31,7 +31,7 @@ sync_batch() {  # args: "path : name" lines on stdin
 
 # Projects a camera-modules-only build never needs. Leaving them out shrinks Soong's analysis
 # (memory) and the disk; the build runs with ALLOW_MISSING_DEPENDENCIES=true.
-SKIP='^(cts|test|platform_testing|developers|tools/tradefederation|tools/test|packages/apps|device/google|device/generic/(goldfish|car|trout)|device/lineage/(atv|car)|prebuilts/(android-emulator|qemu-kernel|abi-dumps|gradle-plugin)|external/(google-cloud-java|cronet|tensorflow|pytorch|executorch|deqp|deqp-deps|swiftshader|angle|chromium-webview|exoplayer|leakcanary2|sdv))(/| :)'
+SKIP='^(cts|test|platform_testing|developers|tools/tradefederation|tools/test|packages/apps|packages/services/Car|device/google|device/generic/(goldfish|car|trout)|device/lineage/(atv|car)|prebuilts/(android-emulator|qemu-kernel|abi-dumps|gradle-plugin)|external/(google-cloud-java|cronet|tensorflow|pytorch|executorch|deqp|deqp-deps|swiftshader|angle|chromium-webview|exoplayer|leakcanary2|sdv))(/| :)'
 # ...except projects that define Soong plugins or modules other code needs
 KEEP='^(test/app_compat/csuite|device/google/cuttlefish|device/google/cuttlefish_prebuilts|device/generic/goldfish|device/generic/goldfish-opengl) :'
 "$REPO" list --all | grep -vE "$SKIP" > /tmp/projects.txt || true
