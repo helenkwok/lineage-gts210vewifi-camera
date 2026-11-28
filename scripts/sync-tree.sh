@@ -29,7 +29,11 @@ sync_batch() {  # args: "path : name" lines on stdin
   echo "[sync] +${#paths[@]} projects, disk free $(df -h . | awk 'NR==2{print $4}')"
 }
 
-"$REPO" list --all > /tmp/projects.txt
+# Projects a camera-modules-only build never needs. Leaving them out shrinks Soong's analysis
+# (memory) and the disk; the build runs with ALLOW_MISSING_DEPENDENCIES=true.
+SKIP='^(cts|test|platform_testing|developers|tools/tradefederation|tools/test|packages/apps|device/google|device/generic/(goldfish|car|trout)|device/lineage/(atv|car)|prebuilts/(android-emulator|qemu-kernel|abi-dumps|gradle-plugin)|external/(google-cloud-java|cronet|tensorflow|pytorch|deqp|deqp-deps|swiftshader|angle|chromium-webview|exoplayer|leakcanary2|sdv))(/| :)'
+"$REPO" list --all | grep -vE "$SKIP" > /tmp/projects.txt || true
+echo "[sync] skipping $("$REPO" list --all | grep -cE "$SKIP" || true) projects not needed for the camera modules"
 n=$(wc -l < /tmp/projects.txt); echo "[sync] $n projects"; [ "$n" -gt 100 ] || { echo "repo list returned too few projects"; exit 1; }
 # biggest first, alone, so their objects are freed before anything else lands
 { grep -E '^prebuilts/(clang/host/linux-x86|rust) :' /tmp/projects.txt || true; } | sync_batch

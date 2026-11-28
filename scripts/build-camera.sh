@@ -52,13 +52,9 @@ if guard not in s:
 print("fsgen guard applied")
 PY
 
-# 4. Keep Soong analysis small: drop device trees this build never uses
-for d in device/generic/car device/google/atv device/lineage/atv device/lineage/car device/google/trout; do
-  rm -rf "${SRC:?}/$d"
-done
-
+# 4. The tree is partial (see sync-tree.sh SKIP): let Soong tolerate references to missing modules
 cd "$SRC"
-export GOGC="${GOGC:-50}" ROOMSERVICE_BRANCHES=none
+export GOGC="${GOGC:-50}" ROOMSERVICE_BRANCHES=none ALLOW_MISSING_DEPENDENCIES=true
 set +u; source build/envsetup.sh; lunch lineage_gts210vewifi-bp1a-userdebug; set -u
 m -j"$JOBS" \
   camera.msm8952 libshims_camera camera.device@1.0-impl \
