@@ -36,6 +36,7 @@ SKIP='^(cts|test|platform_testing|developers|tools/tradefederation|tools/test|pa
 KEEP='^(test/app_compat/csuite|device/google/cuttlefish|device/google/cuttlefish_prebuilts|device/generic/goldfish|device/generic/goldfish-opengl) :'
 "$REPO" list --all | grep -vE "$SKIP" > /tmp/projects.txt || true
 "$REPO" list --all | grep -E "$KEEP" >> /tmp/projects.txt || true
+sort -u -o /tmp/projects.txt /tmp/projects.txt
 echo "[sync] skipping $("$REPO" list --all | grep -cE "$SKIP" || true) projects not needed for the camera modules"
 n=$(wc -l < /tmp/projects.txt); echo "[sync] $n projects"; [ "$n" -gt 100 ] || { echo "repo list returned too few projects"; exit 1; }
 # biggest first, alone, so their objects are freed before anything else lands
